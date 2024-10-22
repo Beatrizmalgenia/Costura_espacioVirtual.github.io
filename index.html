@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 	<head>
-		<title>three.js webgl - equirectangular panorama</title>
+		<!--title>This code was rewritte from three.js webgl - equirectangular panorama, Jón Ragnarsson</title-->
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
 		<link type="text/css" rel="stylesheet" href="main.css">
@@ -10,8 +10,7 @@
 
 		<div id="container"></div>
 		<div id="info">
-			 From <a href="https://threejs.org" target="_blank" rel="noopener">three.js webgl</a> Jón Ragnarsson<br />
-		
+					
 		</div>
 
 		<!-- Import maps polyfill -->
@@ -26,150 +25,160 @@
 				}
 			}
 		</script>
+         <script src= "js/navegacion_basica.js"></script><!--Tenemos que acceder a la cámara en estas funciones-->
 
 		<script type="module">
 
 			import * as THREE from 'three';
 
-			let camera, scene, renderer;
-
-			let isUserInteracting = false,
-				onPointerDownMouseX = 0, onPointerDownMouseY = 0,
-				lon = 0, onPointerDownLon = 0,
-				lat = 0, onPointerDownLat = 0,
-				phi = 0, theta = 0;
-
+			var camera, scene, renderer;
+      
+            let phi = 0, theta = 0;
+            let nZoom=0; let objectSelected=0;
+            var xObject,yObject,zObject; 
+            
+            //para detectar cuando el mouse pasa por los objetos
+            const raycaster = new THREE.Raycaster();
+            const mousePointer = new THREE.Vector2();//normalización del 3D en dos cordenadas del mouse
+            var collitions;
+            var inicializando;
+            var objeto= null;
+            
+            //arreglo de páginas a las que se desplaza
+            var pages= new Array("index3_1.html","360_InfoSpot.html");
+            var audios= new Array("sounds/AudioNicolOgg.ogg","sounds/AudioSusaOgg.ogg","sounds/AudioGloriOgg.ogg","sounds/AudioLeyOgg.ogg","sounds/AudioMargaritaOgg.ogg","sounds/AudioMariaOgg.ogg");
+            let audio= false;
+            //var audio = new Audio('sounds/AudioSusa.wav');
+            
 			init();
 			animate();
 
 			function init() {
 
-				const container = document.getElementById( 'container' );
-
+				inicializando=1;
+                const container = document.getElementById( 'container' );
 				camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 1, 1100 );
-
 				scene = new THREE.Scene();
-
-				const geometry = new THREE.SphereGeometry( 500, 60, 40 );
-				// invert the geometry on the x-axis so that all of the faces point inward
-				geometry.scale( - 1, 1, 1 );
-
-				//const texture = new THREE.TextureLoader().load( 'textures/2294472375_24a3b8ef46_o.jpg' );
-                const texture = new THREE.TextureLoader().load( 'textures/EspacioVRCosturero_8.jpg' );
+                camera.position.y=2;
+                
+                const listener = new THREE.AudioListener();
+                camera.add( listener );
+                const sound = new THREE.Audio( listener );
+                
+                
+                
+                const GlobalGeometry = new THREE.SphereGeometry( 500, 60, 40 );
+				GlobalGeometry.scale( - 1, 1, 1 );
+	            const texture = new THREE.TextureLoader().load( 'img/EspacioVRCosturero_objetos.jpg' );
 				const material = new THREE.MeshBasicMaterial( { map: texture } );
-
-				const mesh = new THREE.Mesh( geometry, material );
-
+				const mesh = new THREE.Mesh( GlobalGeometry, material );
 				scene.add( mesh );
-
+                
+           
+                
+            //Mesa
+                const geometry = new THREE.PlaneGeometry( 1, 1 ); 
+                const texturePlane = new THREE.TextureLoader().load( 'img/B_info.png' );
+                const materialBoton2 = new THREE.MeshBasicMaterial( { map: texturePlane, transparent:true, side: THREE.DoubleSide} );
+                const plane = new THREE.Mesh( geometry, materialBoton2 );
+                scene.add( plane );
+                plane.position.z = 20;
+                plane.position.x = 6;
+                plane.name="0";
+               
+                //ventana
+                const plane1 = new THREE.Mesh( geometry, materialBoton2 );
+                scene.add( plane1 );
+                plane1.position.z = 8;
+                plane1.position.x = -15;
+                plane1.position.y = -1;
+                 plane1.rotation.y = 2;
+                plane1.name="1";                
+               
+                
+                //materas
+                const plane2 = new THREE.Mesh( geometry, materialBoton2 );
+                scene.add( plane2 );
+                plane2.position.z =1;
+                plane2.position.x = -15;
+                plane2.position.y = 10;
+                plane2.rotation.y = 2;
+                plane2.name="2"; 
+                
+                //bolardos
+                const plane3 = new THREE.Mesh( geometry, materialBoton2 );
+                scene.add( plane3 );
+                plane3.position.z =-15;
+                plane3.position.x = -10;
+                plane3.position.y = 0;
+                plane3.rotation.y = 4;
+                plane3.name="3";   
+               
+                //jaula
+                const plane4 = new THREE.Mesh( geometry, materialBoton2 );
+                scene.add( plane4 );
+                plane4.position.z =-8;
+                plane4.position.x = 15;
+                plane4.position.y = 2;
+                plane4.rotation.y =-1;
+                plane4.name="4";   
+                
+                //perra
+                const plane5 = new THREE.Mesh( geometry, materialBoton2 );
+                scene.add( plane5 );
+                plane5.position.z =-2;
+                plane5.position.x = 0;
+                plane5.position.y = -10;
+                plane5.rotation.x = 2;
+                plane5.name="5"; 
+               
+                collitions = [plane,plane1, plane2, plane3, plane4, plane5];
+                
+                
+                const selectedMaterial = new THREE.MeshBasicMaterial({ color: 0xE0C4A8});
+                
 				renderer = new THREE.WebGLRenderer();
 				renderer.setPixelRatio( window.devicePixelRatio );
 				renderer.setSize( window.innerWidth, window.innerHeight );
 				container.appendChild( renderer.domElement );
 
+      
+                
 				container.style.touchAction = 'none';
 				container.addEventListener( 'pointerdown', onPointerDown );
 
 				document.addEventListener( 'wheel', onDocumentMouseWheel );
-
-				//
-
-				document.addEventListener( 'dragover', function ( event ) {
-
-					event.preventDefault();
-					event.dataTransfer.dropEffect = 'copy';
-
-				} );
-
-				document.addEventListener( 'dragenter', function () {
-
-					document.body.style.opacity = 0.5;
-
-				} );
-
-				document.addEventListener( 'dragleave', function () {
-
-					document.body.style.opacity = 1;
-
-				} );
-
-				document.addEventListener( 'drop', function ( event ) {
-
-					event.preventDefault();
-
-					const reader = new FileReader();
-					reader.addEventListener( 'load', function ( event ) {
-
-						material.map.image.src = event.target.result;
-						material.map.needsUpdate = true;
-
-					} );
-					reader.readAsDataURL( event.dataTransfer.files[ 0 ] );
-
-					document.body.style.opacity = 1;
-
-				} );
-
-				//
+              document.addEventListener( 'keydown', keyDown );
+                
 
 				window.addEventListener( 'resize', onWindowResize );
+                
+                //para separar mi navegación en otro js
+              //  setcamera(camera);
 
 			}
 
-			function onWindowResize() {
+            function onWindowResize() {
 
 				camera.aspect = window.innerWidth / window.innerHeight;
 				camera.updateProjectionMatrix();
-
 				renderer.setSize( window.innerWidth, window.innerHeight );
 
 			}
+            function zoom(fov)
+            {
+       	        
+                camera.fov = THREE.MathUtils.clamp( fov, 10, 75 );
+				camera.updateProjectionMatrix();         
+                
+            }
+  
+         
+            function onDocumentMouseWheel( event ) {
 
-			function onPointerDown( event ) {
-
-				if ( event.isPrimary === false ) return;
-
-				isUserInteracting = true;
-
-				onPointerDownMouseX = event.clientX;
-				onPointerDownMouseY = event.clientY;
-
-				onPointerDownLon = lon;
-				onPointerDownLat = lat;
-
-				document.addEventListener( 'pointermove', onPointerMove );
-				document.addEventListener( 'pointerup', onPointerUp );
-
-			}
-
-			function onPointerMove( event ) {
-
-				if ( event.isPrimary === false ) return;
-
-				lon = ( onPointerDownMouseX - event.clientX ) * 0.1 + onPointerDownLon;
-				lat = ( event.clientY - onPointerDownMouseY ) * 0.1 + onPointerDownLat;
-
-			}
-
-			function onPointerUp() {
-
-				if ( event.isPrimary === false ) return;
-
-				isUserInteracting = false;
-
-				document.removeEventListener( 'pointermove', onPointerMove );
-				document.removeEventListener( 'pointerup', onPointerUp );
-
-			}
-
-			function onDocumentMouseWheel( event ) {
-
-				const fov = camera.fov + event.deltaY * 0.05;
-
-				camera.fov = THREE.MathUtils.clamp( fov, 10, 75 );
-
-				camera.updateProjectionMatrix();
-
+				var fov = camera.fov + event.deltaY * 0.05;
+                console.log(" event.deltaY: "+event.deltaY+" camera.fov "+camera.fov);
+                zoom(fov);
 			}
 
 			function animate() {
@@ -178,25 +187,93 @@
 				update();
 
 			}
+            function clickInfo()
+            {
+                if(audio)
+                {
+                    audio.pause();
+                }
+                console.log(" objeto.name "+objeto.name); 
+                
+                audio = new Audio(audios[objeto.name]);
+                audio.play();
+                //window.open(page,"_self");
+               
+            }
 
 			function update() {
 
-				if ( isUserInteracting === false ) {
 
-					lon += 0.1;
-
-				}
-
-				lat = Math.max( - 85, Math.min( 85, lat ) );
+				var lat = Math.max( - 85, Math.min( 85, getlat() ) );
 				phi = THREE.MathUtils.degToRad( 90 - lat );
-				theta = THREE.MathUtils.degToRad( lon );
+				theta = THREE.MathUtils.degToRad( getlon() );
 
-				const x = 500 * Math.sin( phi ) * Math.cos( theta );
-				const y = 500 * Math.cos( phi );
-				const z = 500 * Math.sin( phi ) * Math.sin( theta );
+				var x = 500 * Math.sin( phi ) * Math.cos( theta );
+				var y = 500 * Math.cos( phi );
+				var z = 500 * Math.sin( phi ) * Math.sin( theta );
 
-				camera.lookAt( x, y, z );
+				
+                //----colisiones-------------------------------------
+                mousePointer.x =getPointer()[0];// getPointer porque esta en otro archivo js las funiones para interacción, se llena en onPointerDown no solo al mover
+                mousePointer.y =getPointer()[1];
+                raycaster.setFromCamera(mousePointer, camera);
+                const intersects = raycaster.intersectObjects( collitions );
+                
+             
+                if(intersects.length){
+                    
+                    //me quedo con el primero en la lista ignoro todo el arreglo de objetos
+                    //debo guardar las coordenadas del objeto ya que al cambiar el foco cambiarían estas y deja de tomarse como intersección
+                    objeto= intersects[ 0 ].object;
+                    if(inicializando)//para que la primera vez no haga nada
+                    {
+                       inicializando=0; 
+                    }
+                    else{
+                      xObject =   objeto.position.x;
+                      yObject =   objeto.position.y;
+                      zObject =   objeto.position.z;
+                      objectSelected=1;                          
+                            
+                    }
+                }
+                if(objectSelected)
+                {
+                    x=xObject;
+                    y=yObject;
+                    z=zObject;
+                }
+               
+                camera.lookAt( x, y, z );    
+            
+                 
+                //------------animación de la cámara---------------
+      
+           
+                if(objectSelected)
+                {
+                   
+                    if(nZoom<40)
+                     {
+                      // camera.zoom= camera.zoom+3;
+                         //  camera.position.x= camera.position.x+3;
+                       camera.fov=camera.fov-0.5;
+                       zoom(camera.fov);
+                       setTimeout(2000);
+                        nZoom++; 
+                        
+                     }
+                    else if (nZoom>=40){
+                        
+                        nZoom=0;
+                        objectSelected=0;
+                        
+                        clickInfo();
+                    }
+                }
+               
 
+                
 				renderer.render( scene, camera );
 
 			}
