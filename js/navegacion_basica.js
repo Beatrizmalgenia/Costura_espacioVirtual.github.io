@@ -5,6 +5,7 @@ var onPointerDownMouseX = 0, onPointerDownMouseY = 0,lon = 0, onPointerDownLon =
 var camera;
 var cameraZoom=0;
 var pointer = new Array(0,0);
+var isUserClicking = 0;
 
 function getlon(){
     return lon;
@@ -34,7 +35,7 @@ function getPointer()
 
 				if ( event.isPrimary === false ) return;
 
-				//isUserInteracting = true;
+				isUserClicking = true;
 
 				onPointerDownMouseX = event.clientX;
 				onPointerDownMouseY = event.clientY;
@@ -53,6 +54,7 @@ function getPointer()
 			function onPointerMove( event ) {
 
 				if ( event.isPrimary === false ) return;
+				isUserClicking = false;
 
 				lon = ( onPointerDownMouseX - event.clientX ) * 0.1 + onPointerDownLon;
 				lat = ( event.clientY - onPointerDownMouseY ) * 0.1 + onPointerDownLat;
@@ -64,7 +66,7 @@ function getPointer()
 
 				if ( event.isPrimary === false ) return;
 
-				//isUserInteracting = false;
+				isUserClicking = false;
 
 				document.removeEventListener( 'pointermove', onPointerMove );
 				document.removeEventListener( 'pointerup', onPointerUp );
@@ -78,7 +80,7 @@ function keyDown(event){
             
             case 38:
             cameraZoom++
-            //alert("cameraZoom"+cameraZoom);
+            console.log("cameraZoom"+cameraZoom);
             break;
             
     }
